@@ -1,16 +1,16 @@
-resource "local_file" "01" {
-    content     = "01"
-    filename = "/tmp/local_file_test.01"
+resource "local_file" "f00" {
+    content     = "${timestamp()}"
+    filename = "/tmp/local_file_test.00"
 }
 
-resource "local_file" "04" {
-    content     = "04"
-    filename = "/tmp/local_file_test.04"
+resource "local_file" "f03" {
+    content     = "${timestamp()}"
+    filename = "/tmp/local_file_test.03"
 }
 
-output "local_file_01_id" {
-  value = "${local_file.01.id}"
+output "local_file_00_id" {
+  value = "${local_file.f00.id}"
 }
-output "local_file_04_id" {
-  value = "${local_file.04.id}"
+output "local_file_03_id" {
+  value = "${local_file.f03.id}"
 }

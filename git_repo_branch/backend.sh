@@ -2,6 +2,7 @@
 # stores terraform state in a git repo branch
 # locks state by adding a lock file to the same branch before updating state
 # unlocks state by removing the lock file from the branch after updating state
+
 set -e
 
 # files to pass states and lock between terraform and command
@@ -10,6 +11,7 @@ state_transfer="state_transfer"
 lock_transfer="lock_transfer"
 
 # change below to reflect your environment
+# please pre-configure the repo and branch, and test access
 repo_address=https://github.com/bzcnsh/git_lock_testground.git
 repo_branch=cmd_state_test
 repo_local=state_local
@@ -19,7 +21,13 @@ command=$1
 
 # additional identifying information git commit messages
 runner_id=$(basename $(pwd))
-
+# optional log file for successful operations. set to debug.
+log_success(){
+  if [[ ! -z $DEBUG_LOG_FILE ]]; then
+    msg="$(date +"%T")   $runner_id   $command"
+    echo "$msg">>$DEBUG_LOG_FILE
+  fi
+}
 add_file_to_repo(){
   repo_dir=$1
   file=$2
@@ -78,6 +86,7 @@ delete_file_from_repo(){
 case $command in
   PUT)
     add_file_to_repo $repo_local $state_transfer "update TF states. $runner_id" "FAIL. cannot update states file. git push failed"
+    log_success
     exit 0
     ;;
   GET)
@@ -92,25 +101,29 @@ case $command in
     if [[ -f $repo_local/$state_transfer ]]; then
       yes | cp $repo_local/$state_transfer ./
     fi
+    log_success
     exit 0
     ;;
   LOCK)
     refresh_repo $repo_local
     if [[ -f $repo_local/$lock_transfer ]]; then
-        echo "WARN. cannot obtain lock. already locked."
         cat $repo_local/$lock_transfer
+        echo "WARN. cannot obtain lock. already locked"
         exit 1
     else
-        add_file_to_repo $repo_local $lock_transfer "lock. $runner_id" "FAIL. Cannot obtain lock. git push failed."
+        add_file_to_repo $repo_local $lock_transfer "lock. $runner_id" "WARN. Cannot obtain lock. git push failed."
+        log_success
         exit 0
     fi
     ;;
   UNLOCK)
     delete_file_from_repo $repo_local $lock_transfer "unlock. $runner_id" "FAIL. Lock file not found."
+    log_success
     exit 0
     ;;
   DELETE)
     delete_file_from_repo $repo_local $state_transfer "delete TF state. $runner_id" "FAIL. states file not found."
+    log_success
     exit 0
     ;;
   *)

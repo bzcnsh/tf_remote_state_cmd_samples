@@ -10,10 +10,17 @@ nowtime=$(date +%s)
 terraform init
 while [ $nowtime -le $endtime ]; do
     set +e
-    ~/go/bin/terraform apply -auto-approve
+    terraform apply -auto-approve
+    exit_code=$?
     set -e
-    date>>output.txt
-    ~/go/bin/terraform output>>output.txt
+    if [[ $exit_code -eq 0 ]]; then
+        hadsuccess=true
+    fi
+    # without any successful terraform apply, terraform output would fail
+    if [[ ! -z $hadsuccess ]]; then
+        date +"%T">>output.txt
+        terraform output>>output.txt
+    fi
     sleep $((1 + $RANDOM % 10))
     nowtime=$(date +%s)
 done
