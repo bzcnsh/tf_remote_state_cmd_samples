@@ -6,7 +6,9 @@ duration=$1
 starttime=$(date +%s)
 endtime=$(( $starttime + $duration ))
 nowtime=$(date +%s)
-
+if [[ -f pre.sh ]]; then
+    . pre.sh
+fi
 terraform init
 while [ $nowtime -le $endtime ]; do
     set +e
@@ -21,6 +23,6 @@ while [ $nowtime -le $endtime ]; do
         date +"%T">>output.txt
         terraform output>>output.txt
     fi
-    sleep $((1 + $RANDOM % 10))
+    sleep $(( $RANDOM % 2 ))
     nowtime=$(date +%s)
 done
